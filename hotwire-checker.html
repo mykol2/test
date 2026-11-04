@@ -335,7 +335,7 @@ Rules:
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
       body: JSON.stringify({
         model,
-        max_tokens: 1024,
+        max_tokens: 2048,
         messages: [{ role: 'user', content: [...imgContent, { type: 'text', text: prompt }] }]
       })
     });
