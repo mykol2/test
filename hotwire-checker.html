@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hotwire Checker</title>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #1a1a1a;
+    --border: #2a2a2a;
+    --accent: #e63946;
+    --text: #f1f1f1;
+    --muted: #888;
+    --green: #2a9d8f;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f5f5f5;
+      --surface: #fff;
+      --border: #ddd;
+      --text: #111;
+      --muted: #666;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+    gap: 20px;
+  }
+  h1 { font-size: 1.4rem; letter-spacing: .05em; color: var(--accent); }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    width: 100%;
+    max-width: 480px;
+  }
+  label { font-size: .8rem; color: var(--muted); display: block; margin-bottom: 6px; }
+  input[type=password], input[type=text] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 12px;
+    font-size: .9rem;
+    outline: none;
+  }
+  input:focus { border-color: var(--accent); }
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-cam { background: var(--accent); color: #fff; }
+  .btn-analyze { background: var(--green); color: #fff; margin-top: 12px; }
+  .btn:hover:not(:disabled) { opacity: .85; }
+  #preview-wrap {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 4/3;
+    display: none;
+  }
+  #preview-wrap.active { display: block; }
+  video, #snap { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #snap { display: none; position: absolute; inset: 0; }
+  #snap.show { display: block; }
+  .shutter {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background: rgba(255,255,255,.25);
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .shutter::after {
+    content: '';
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: #fff;
+  }
+  .retake {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(0,0,0,.6);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: .8rem;
+    cursor: pointer;
+    display: none;
+  }
+  .retake.show { display: block; }
+  #result {
+    white-space: pre-wrap;
+    font-size: .9rem;
+    line-height: 1.6;
+    color: var(--text);
+    display: none;
+  }
+  #result.show { display: block; }
+  .verdict {
+    font-size: 1.3rem;
+    font-weight: 700;
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .verdict.yes { background: #2d1b1b; color: #ff6b6b; border: 1px solid #c0392b; }
+  .verdict.no  { background: #1b2d1e; color: #6bffaa; border: 1px solid #27ae60; }
+  .details { font-size: .88rem; }
+  .spinner {
+    display: none;
+    text-align: center;
+    color: var(--muted);
+    padding: 16px 0;
+    font-size: .9rem;
+  }
+  .spinner.show { display: block; }
+  canvas { display: none; }
+  .upload-label {
+    display: block;
+    text-align: center;
+    color: var(--muted);
+    font-size: .82rem;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 8px;
+  }
+  #file-input { display: none; }
+  .sep { color: var(--muted); text-align: center; font-size: .8rem; }
+</style>
+</head>
+<body>
+<h1>🔑 Hotwire Checker</h1>
+
+<div class="card">
+  <label>Anthropic API Key</label>
+  <input type="password" id="apikey" placeholder="sk-ant-..." autocomplete="off">
+</div>
+
+<div class="card" style="gap:12px;display:flex;flex-direction:column">
+  <button class="btn btn-cam" id="cam-btn">📷 Open Camera</button>
+  <p class="sep">— or —</p>
+  <label class="upload-label" for="file-input">Upload a photo</label>
+  <input type="file" id="file-input" accept="image/*">
+
+  <div id="preview-wrap">
+    <video id="video" autoplay playsinline muted></video>
+    <img id="snap">
+    <button class="shutter" id="shutter-btn" title="Take photo"></button>
+    <button class="retake" id="retake-btn">↩ Retake</button>
+  </div>
+
+  <canvas id="canvas"></canvas>
+  <button class="btn btn-analyze" id="analyze-btn" disabled>🔍 Analyze</button>
+</div>
+
+<div class="card">
+  <div class="spinner" id="spinner">Analyzing… this may take a few seconds.</div>
+  <div id="result"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const video = $('video');
+const snap = $('snap');
+const canvas = $('canvas');
+const camBtn = $('cam-btn');
+const shutterBtn = $('shutter-btn');
+const retakeBtn = $('retake-btn');
+const analyzeBtn = $('analyze-btn');
+const previewWrap = $('preview-wrap');
+const spinner = $('spinner');
+const result = $('result');
+const fileInput = $('file-input');
+
+let stream = null;
+let imageB64 = null;
+let imageMime = 'image/jpeg';
+
+camBtn.onclick = async () => {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    video.srcObject = stream;
+    previewWrap.classList.add('active');
+    snap.classList.remove('show');
+    retakeBtn.classList.remove('show');
+    shutterBtn.style.display = '';
+    analyzeBtn.disabled = true;
+    imageB64 = null;
+    camBtn.textContent = '📷 Camera Active';
+  } catch (e) {
+    alert('Camera access denied: ' + e.message);
+  }
+};
+
+shutterBtn.onclick = () => {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+  imageB64 = dataUrl.split(',')[1];
+  imageMime = 'image/jpeg';
+  snap.src = dataUrl;
+  snap.classList.add('show');
+  retakeBtn.classList.add('show');
+  shutterBtn.style.display = 'none';
+  analyzeBtn.disabled = false;
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+};
+
+retakeBtn.onclick = async () => {
+  snap.classList.remove('show');
+  retakeBtn.classList.remove('show');
+  shutterBtn.style.display = '';
+  analyzeBtn.disabled = true;
+  imageB64 = null;
+  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+  video.srcObject = stream;
+};
+
+fileInput.onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  imageMime = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const dataUrl = ev.target.result;
+    imageB64 = dataUrl.split(',')[1];
+    snap.src = dataUrl;
+    snap.classList.add('show');
+    previewWrap.classList.add('active');
+    shutterBtn.style.display = 'none';
+    retakeBtn.classList.add('show');
+    analyzeBtn.disabled = false;
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  };
+  reader.readAsDataURL(file);
+};
+
+analyzeBtn.onclick = async () => {
+  const key = $('apikey').value.trim();
+  if (!key) { alert('Enter your Anthropic API key first.'); return; }
+  if (!imageB64) { alert('Take or upload a photo first.'); return; }
+
+  spinner.classList.add('show');
+  result.classList.remove('show');
+  result.innerHTML = '';
+  analyzeBtn.disabled = true;
+
+  const prompt = `You are an automotive security researcher analyzing a car photo for educational purposes.
+
+Look at this vehicle and determine:
+1. Make, model, and approximate year/generation
+2. Whether it uses an immobilizer (transponder chip key) or is pre-immobilizer
+3. Hotwirability assessment
+
+Format your response EXACTLY as JSON (nothing else, no markdown):
+{
+  "make": "...",
+  "model": "...",
+  "year_range": "...",
+  "has_immobilizer": true|false,
+  "immobilizer_note": "...",
+  "hotwirable": true|false,
+  "verdict_summary": "one sentence verdict",
+  "wiring_notes": "brief notes on ignition wiring approach if applicable, or why immobilizer prevents it",
+  "confidence": "high|medium|low"
+}
+
+General rules:
+- Pre-1998 US vehicles: typically NO immobilizer, hotwirable
+- Post-1998 EU / post-2000 US: usually HAS immobilizer (transponder key required), NOT hotwirable via wires alone
+- Luxury brands (BMW, Mercedes, Audi post-1995): early immobilizer adoption
+- If you cannot identify the car clearly, set confidence to "low"`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-calls': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-5-5',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: imageMime, data: imageB64 } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error?.message || `HTTP ${res.status}`);
+    }
+
+    let text = data.content?.[0]?.text || '';
+    // strip markdown fences if present
+    text = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
+
+    let parsed;
+    try { parsed = JSON.parse(text); }
+    catch { throw new Error('Could not parse model response:\n' + text); }
+
+    const hotwirable = parsed.hotwirable;
+    const verdictClass = hotwirable ? 'yes' : 'no';
+    const verdictText = hotwirable
+      ? '⚠️ LIKELY HOTWIRABLE'
+      : '🔒 IMMOBILIZER / NOT EASILY HOTWIRABLE';
+
+    result.innerHTML = `
+      <div class="verdict ${verdictClass}">${verdictText}</div>
+      <div class="details">
+        <strong>${parsed.make} ${parsed.model}</strong> (${parsed.year_range})<br><br>
+        <strong>Immobilizer:</strong> ${parsed.has_immobilizer ? 'Yes' : 'No'} — ${parsed.immobilizer_note}<br><br>
+        <strong>Summary:</strong> ${parsed.verdict_summary}<br><br>
+        <strong>Wiring notes:</strong> ${parsed.wiring_notes}<br><br>
+        <span style="color:var(--muted);font-size:.8rem">Confidence: ${parsed.confidence}</span>
+      </div>`;
+
+    result.classList.add('show');
+  } catch (err) {
+    result.innerHTML = `<span style="color:var(--accent)">Error: ${err.message}</span>`;
+    result.classList.add('show');
+  } finally {
+    spinner.classList.remove('show');
+    analyzeBtn.disabled = false;
+  }
+};
+</script>
+</body>
+</html>
