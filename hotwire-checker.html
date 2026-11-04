@@ -3,206 +3,185 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hotwire Checker — Free</title>
+<title>Hotwire Checker</title>
 <style>
   :root {
-    --bg: #0d0d0d;
-    --surface: #1a1a1a;
-    --border: #2a2a2a;
-    --accent: #e63946;
-    --text: #f1f1f1;
-    --muted: #888;
-    --green: #2a9d8f;
+    --bg: #0d0d0d; --surface: #1a1a1a; --border: #2a2a2a;
+    --accent: #e63946; --text: #f1f1f1; --muted: #888; --green: #2a9d8f;
   }
   @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #f5f5f5;
-      --surface: #fff;
-      --border: #ddd;
-      --text: #111;
-      --muted: #666;
-    }
+    :root { --bg: #f5f5f5; --surface: #fff; --border: #ddd; --text: #111; --muted: #666; }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: var(--bg);
-    color: var(--text);
+    background: var(--bg); color: var(--text);
     font-family: 'Segoe UI', system-ui, sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 24px 16px;
-    gap: 20px;
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; padding: 24px 16px; gap: 16px;
   }
   h1 { font-size: 1.4rem; letter-spacing: .05em; color: var(--accent); }
   .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    width: 100%;
-    max-width: 480px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; width: 100%; max-width: 500px;
+    display: flex; flex-direction: column; gap: 12px;
   }
-  label { font-size: .8rem; color: var(--muted); display: block; margin-bottom: 6px; }
-  input[type=password], input[type=text] {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    padding: 10px 12px;
-    font-size: .9rem;
-    outline: none;
+  .warn-banner {
+    background: #2a1f00; border: 1px solid #c47800; border-radius: 10px;
+    padding: 12px 16px; font-size: .85rem; line-height: 1.5; color: #ffd080;
+    width: 100%; max-width: 500px;
   }
-  input:focus { border-color: var(--accent); }
+  .warn-banner strong { display: block; margin-bottom: 4px; }
+  .dl-btn {
+    display: inline-block; margin-top: 6px; padding: 6px 12px;
+    background: #c47800; color: #fff; border-radius: 6px;
+    font-size: .8rem; font-weight: 600; cursor: pointer;
+    text-decoration: none; border: none;
+  }
+  label { font-size: .8rem; color: var(--muted); display: block; }
+  input[type=password] {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: .9rem; outline: none;
+  }
+  input[type=password]:focus { border-color: var(--accent); }
   .btn {
-    display: block;
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity .15s;
+    display: block; width: 100%; padding: 11px; border: none;
+    border-radius: 8px; font-size: .95rem; font-weight: 600;
+    cursor: pointer; transition: opacity .15s;
   }
   .btn:disabled { opacity: .4; cursor: not-allowed; }
   .btn-cam { background: var(--accent); color: #fff; }
-  .btn-analyze { background: var(--green); color: #fff; margin-top: 12px; }
+  .btn-analyze { background: var(--green); color: #fff; }
+  .btn-more { background: #444; color: #fff; }
   .btn:hover:not(:disabled) { opacity: .85; }
+  .sep { color: var(--muted); text-align: center; font-size: .8rem; }
+  .upload-label {
+    display: block; text-align: center; color: var(--muted);
+    font-size: .82rem; cursor: pointer; text-decoration: underline;
+  }
+  #file-input { display: none; }
   #preview-wrap {
-    position: relative;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #000;
-    aspect-ratio: 4/3;
-    display: none;
+    position: relative; border-radius: 10px; overflow: hidden;
+    background: #000; aspect-ratio: 4/3; display: none;
   }
   #preview-wrap.active { display: block; }
   video, #snap { width: 100%; height: 100%; object-fit: cover; display: block; }
   #snap { display: none; position: absolute; inset: 0; }
   #snap.show { display: block; }
   .shutter {
-    position: absolute;
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    border: 3px solid #fff;
-    background: rgba(255,255,255,.25);
-    cursor: pointer;
-    backdrop-filter: blur(4px);
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    width: 56px; height: 56px; border-radius: 50%; border: 3px solid #fff;
+    background: rgba(255,255,255,.25); cursor: pointer; backdrop-filter: blur(4px);
     display: flex; align-items: center; justify-content: center;
   }
   .shutter::after {
-    content: '';
-    width: 38px; height: 38px;
-    border-radius: 50%;
-    background: #fff;
+    content: ''; width: 38px; height: 38px; border-radius: 50%; background: #fff;
   }
-  .retake {
-    position: absolute;
-    top: 10px; right: 10px;
-    background: rgba(0,0,0,.6);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: .8rem;
-    cursor: pointer;
-    display: none;
+  .retake-btn {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(0,0,0,.6); color: #fff; border: none;
+    border-radius: 6px; padding: 6px 10px; font-size: .8rem; cursor: pointer; display: none;
   }
-  .retake.show { display: block; }
-  #result {
-    white-space: pre-wrap;
-    font-size: .9rem;
-    line-height: 1.6;
-    color: var(--text);
-    display: none;
+  .retake-btn.show { display: block; }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .thumb {
+    width: 70px; height: 70px; border-radius: 6px;
+    object-fit: cover; border: 2px solid var(--border);
+    position: relative; display: block;
   }
+  .thumb-wrap { position: relative; display: inline-block; }
+  .thumb-del {
+    position: absolute; top: -6px; right: -6px; background: var(--accent);
+    color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px;
+    font-size: .65rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .photo-count { font-size: .8rem; color: var(--muted); }
+  #result { display: none; }
   #result.show { display: block; }
   .verdict {
-    font-size: 1.3rem;
-    font-weight: 700;
-    padding: 10px 16px;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    text-align: center;
+    font-size: 1.3rem; font-weight: 700; padding: 10px 16px;
+    border-radius: 8px; margin-bottom: 12px; text-align: center;
   }
   .verdict.yes { background: #2d1b1b; color: #ff6b6b; border: 1px solid #c0392b; }
   .verdict.no  { background: #1b2d1e; color: #6bffaa; border: 1px solid #27ae60; }
-  .details { font-size: .88rem; }
-  .spinner {
-    display: none;
-    text-align: center;
-    color: var(--muted);
-    padding: 16px 0;
-    font-size: .9rem;
-  }
+  .verdict.unknown { background: #1f1f2d; color: #aabbff; border: 1px solid #445; }
+  .details { font-size: .88rem; line-height: 1.7; }
+  .spinner { display: none; text-align: center; color: var(--muted); padding: 16px 0; font-size: .9rem; }
   .spinner.show { display: block; }
   canvas { display: none; }
-  .upload-label {
-    display: block;
-    text-align: center;
-    color: var(--muted);
-    font-size: .82rem;
-    cursor: pointer;
-    text-decoration: underline;
-    margin-top: 8px;
-  }
-  #file-input { display: none; }
-  .sep { color: var(--muted); text-align: center; font-size: .8rem; }
 </style>
 </head>
 <body>
 <h1>🔑 Hotwire Checker</h1>
 
+<div class="warn-banner" id="cors-warn">
+  <strong>⚠️ Run as a local file for best results</strong>
+  Browser security may block API calls when viewed inside claude.ai.
+  Download and open the file directly in your browser for it to work.
+  <br>
+  <button class="dl-btn" onclick="downloadSelf()">⬇ Download HTML</button>
+</div>
+
 <div class="card">
-  <label>Google Gemini API Key — <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">get free key</a></label>
+  <label>Google Gemini API Key — <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">get free key ↗</a></label>
   <input type="password" id="apikey" placeholder="AIza..." autocomplete="off">
 </div>
 
-<div class="card" style="gap:12px;display:flex;flex-direction:column">
-  <button class="btn btn-cam" id="cam-btn">📷 Open Camera</button>
+<div class="card">
+  <div class="thumbs" id="thumbs"></div>
+  <span class="photo-count" id="photo-count">No photos added</span>
+
+  <button class="btn btn-cam" id="cam-btn">📷 Add Photo (Camera)</button>
   <p class="sep">— or —</p>
   <label class="upload-label" for="file-input">Upload a photo</label>
-  <input type="file" id="file-input" accept="image/*">
+  <input type="file" id="file-input" accept="image/*" multiple>
 
   <div id="preview-wrap">
     <video id="video" autoplay playsinline muted></video>
     <img id="snap">
-    <button class="shutter" id="shutter-btn" title="Take photo"></button>
-    <button class="retake" id="retake-btn">↩ Retake</button>
+    <button class="shutter" id="shutter-btn"></button>
+    <button class="retake-btn" id="retake-btn">↩ Retake</button>
   </div>
-
   <canvas id="canvas"></canvas>
   <button class="btn btn-analyze" id="analyze-btn" disabled>🔍 Analyze</button>
 </div>
 
 <div class="card">
-  <div class="spinner" id="spinner">Analyzing… this may take a few seconds.</div>
+  <div class="spinner" id="spinner">Analyzing… may take a few seconds.</div>
   <div id="result"></div>
+  <button class="btn btn-more" id="more-btn" style="display:none" onclick="requestMorePhotos()">📸 Add More Photos for Better ID</button>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
-const video = $('video');
-const snap = $('snap');
-const canvas = $('canvas');
-const camBtn = $('cam-btn');
-const shutterBtn = $('shutter-btn');
-const retakeBtn = $('retake-btn');
-const analyzeBtn = $('analyze-btn');
-const previewWrap = $('preview-wrap');
-const spinner = $('spinner');
-const result = $('result');
-const fileInput = $('file-input');
+const video = $('video'), snap = $('snap'), canvas = $('canvas');
+const camBtn = $('cam-btn'), shutterBtn = $('shutter-btn'), retakeBtn = $('retake-btn');
+const analyzeBtn = $('analyze-btn'), previewWrap = $('preview-wrap');
+const spinner = $('spinner'), result = $('result'), fileInput = $('file-input');
+const thumbsEl = $('thumbs'), photoCount = $('photo-count'), moreBtn = $('more-btn');
 
 let stream = null;
-let imageB64 = null;
-let imageMime = 'image/jpeg';
+let photos = []; // [{b64, mime}]
+
+function updatePhotoUI() {
+  thumbsEl.innerHTML = '';
+  photos.forEach((p, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'thumb-wrap';
+    const img = document.createElement('img');
+    img.className = 'thumb';
+    img.src = `data:${p.mime};base64,${p.b64}`;
+    const del = document.createElement('button');
+    del.className = 'thumb-del';
+    del.textContent = '×';
+    del.onclick = () => { photos.splice(i, 1); updatePhotoUI(); };
+    wrap.appendChild(img); wrap.appendChild(del);
+    thumbsEl.appendChild(wrap);
+  });
+  photoCount.textContent = photos.length === 0
+    ? 'No photos added'
+    : `${photos.length} photo${photos.length > 1 ? 's' : ''} added — add more angles for better accuracy`;
+  analyzeBtn.disabled = photos.length === 0;
+}
 
 camBtn.onclick = async () => {
   try {
@@ -212,76 +191,70 @@ camBtn.onclick = async () => {
     snap.classList.remove('show');
     retakeBtn.classList.remove('show');
     shutterBtn.style.display = '';
-    analyzeBtn.disabled = true;
-    imageB64 = null;
-    camBtn.textContent = '📷 Camera Active';
-  } catch (e) {
-    alert('Camera access denied: ' + e.message);
-  }
+  } catch(e) { alert('Camera error: ' + e.message); }
 };
 
 shutterBtn.onclick = () => {
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
   canvas.getContext('2d').drawImage(video, 0, 0);
   const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-  imageB64 = dataUrl.split(',')[1];
-  imageMime = 'image/jpeg';
-  snap.src = dataUrl;
-  snap.classList.add('show');
-  retakeBtn.classList.add('show');
-  shutterBtn.style.display = 'none';
-  analyzeBtn.disabled = false;
+  photos.push({ b64: dataUrl.split(',')[1], mime: 'image/jpeg' });
+  snap.src = dataUrl; snap.classList.add('show');
+  retakeBtn.classList.add('show'); shutterBtn.style.display = 'none';
   if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  previewWrap.classList.remove('active');
+  updatePhotoUI();
 };
 
 retakeBtn.onclick = async () => {
-  snap.classList.remove('show');
-  retakeBtn.classList.remove('show');
+  snap.classList.remove('show'); retakeBtn.classList.remove('show');
   shutterBtn.style.display = '';
-  analyzeBtn.disabled = true;
-  imageB64 = null;
   stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
   video.srcObject = stream;
+  previewWrap.classList.add('active');
 };
 
 fileInput.onchange = e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  imageMime = file.type || 'image/jpeg';
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const dataUrl = ev.target.result;
-    imageB64 = dataUrl.split(',')[1];
-    snap.src = dataUrl;
-    snap.classList.add('show');
-    previewWrap.classList.add('active');
-    shutterBtn.style.display = 'none';
-    retakeBtn.classList.add('show');
-    analyzeBtn.disabled = false;
-    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-  };
-  reader.readAsDataURL(file);
+  Array.from(e.target.files).forEach(file => {
+    const mime = file.type || 'image/jpeg';
+    const reader = new FileReader();
+    reader.onload = ev => {
+      photos.push({ b64: ev.target.result.split(',')[1], mime });
+      updatePhotoUI();
+    };
+    reader.readAsDataURL(file);
+  });
+  fileInput.value = '';
 };
+
+function requestMorePhotos() {
+  moreBtn.style.display = 'none';
+  document.getElementById('cam-btn').scrollIntoView({ behavior: 'smooth' });
+  photoCount.textContent = 'Add more angles (front, badge, dashboard) then re-analyze';
+}
 
 analyzeBtn.onclick = async () => {
   const key = $('apikey').value.trim();
-  if (!key) { alert('Enter your Anthropic API key first.'); return; }
-  if (!imageB64) { alert('Take or upload a photo first.'); return; }
+  if (!key) { alert('Enter your Gemini API key first.'); return; }
+  if (!photos.length) { alert('Add at least one photo first.'); return; }
 
   spinner.classList.add('show');
   result.classList.remove('show');
   result.innerHTML = '';
+  moreBtn.style.display = 'none';
   analyzeBtn.disabled = true;
 
-  const prompt = `You are an automotive security researcher analyzing a car photo for educational purposes.
+  const photoWord = photos.length > 1 ? `${photos.length} photos` : 'this photo';
+  const prompt = `You are an automotive security researcher. Analyze ${photoWord} of a vehicle.
 
-Look at this vehicle and determine:
-1. Make, model, and approximate year/generation
-2. Whether it uses an immobilizer (transponder chip key) or is pre-immobilizer
-3. Hotwirability assessment
+Determine:
+1. Make, model, approximate year/generation
+2. Whether it uses a transponder immobilizer key or is pre-immobilizer
+3. Hotwirability
 
-Format your response EXACTLY as JSON (nothing else, no markdown):
+If you cannot confidently identify the car (blurry, bad angle, partial view), set "needs_more_photos": true and describe what additional angles would help.
+
+Respond ONLY with valid JSON, no markdown:
 {
   "make": "...",
   "model": "...",
@@ -289,16 +262,23 @@ Format your response EXACTLY as JSON (nothing else, no markdown):
   "has_immobilizer": true|false,
   "immobilizer_note": "...",
   "hotwirable": true|false,
-  "verdict_summary": "one sentence verdict",
-  "wiring_notes": "brief notes on ignition wiring approach if applicable, or why immobilizer prevents it",
-  "confidence": "high|medium|low"
+  "verdict_summary": "one sentence",
+  "wiring_notes": "...",
+  "confidence": "high|medium|low",
+  "needs_more_photos": false,
+  "more_photos_hint": ""
 }
 
-General rules:
-- Pre-1998 US vehicles: typically NO immobilizer, hotwirable
-- Post-1998 EU / post-2000 US: usually HAS immobilizer (transponder key required), NOT hotwirable via wires alone
-- Luxury brands (BMW, Mercedes, Audi post-1995): early immobilizer adoption
-- If you cannot identify the car clearly, set confidence to "low"`;
+Rules:
+- Pre-1998 US / pre-1996 EU: typically NO immobilizer, hotwirable
+- Post-2000 most markets: transponder key required, NOT hotwirable via wires alone
+- Luxury brands (BMW, Mercedes, Audi post-1995): early immobilizer
+- If you can't identify: set needs_more_photos true, describe what angle/detail would help`;
+
+  const parts = photos.flatMap(p => [
+    { inline_data: { mime_type: p.mime, data: p.b64 } }
+  ]);
+  parts.push({ text: prompt });
 
   try {
     const res = await fetch(
@@ -307,49 +287,47 @@ General rules:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              { inline_data: { mime_type: imageMime, data: imageB64 } },
-              { text: prompt }
-            ]
-          }],
+          contents: [{ parts }],
           generationConfig: { maxOutputTokens: 1024, responseMimeType: 'application/json' }
         })
       }
     );
 
     const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
 
-    if (!res.ok) {
-      throw new Error(data.error?.message || `HTTP ${res.status}`);
+    let text = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+    text = text.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```$/,'').trim();
+
+    let p;
+    try { p = JSON.parse(text); }
+    catch { throw new Error('Bad response from model:\n' + text); }
+
+    if (p.needs_more_photos) {
+      result.innerHTML = `
+        <div class="verdict unknown">🔎 Can't Identify — Need More Photos</div>
+        <div class="details">
+          ${p.more_photos_hint || 'Try a clearer angle showing the front grille, badge, or dashboard.'}<br><br>
+          <span style="color:var(--muted);font-size:.8rem">Photos added: ${photos.length}</span>
+        </div>`;
+      moreBtn.style.display = 'block';
+    } else {
+      const cls = p.hotwirable ? 'yes' : 'no';
+      const label = p.hotwirable ? '⚠️ LIKELY HOTWIRABLE' : '🔒 IMMOBILIZER / NOT EASILY HOTWIRABLE';
+      result.innerHTML = `
+        <div class="verdict ${cls}">${label}</div>
+        <div class="details">
+          <strong>${p.make} ${p.model}</strong> (${p.year_range})<br><br>
+          <strong>Immobilizer:</strong> ${p.has_immobilizer ? 'Yes' : 'No'} — ${p.immobilizer_note}<br><br>
+          <strong>Summary:</strong> ${p.verdict_summary}<br><br>
+          <strong>Wiring notes:</strong> ${p.wiring_notes}<br><br>
+          <span style="color:var(--muted);font-size:.8rem">Confidence: ${p.confidence} · Photos used: ${photos.length}</span>
+        </div>`;
+      if (p.confidence === 'low') moreBtn.style.display = 'block';
     }
 
-    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    // strip markdown fences if present
-    text = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
-
-    let parsed;
-    try { parsed = JSON.parse(text); }
-    catch { throw new Error('Could not parse model response:\n' + text); }
-
-    const hotwirable = parsed.hotwirable;
-    const verdictClass = hotwirable ? 'yes' : 'no';
-    const verdictText = hotwirable
-      ? '⚠️ LIKELY HOTWIRABLE'
-      : '🔒 IMMOBILIZER / NOT EASILY HOTWIRABLE';
-
-    result.innerHTML = `
-      <div class="verdict ${verdictClass}">${verdictText}</div>
-      <div class="details">
-        <strong>${parsed.make} ${parsed.model}</strong> (${parsed.year_range})<br><br>
-        <strong>Immobilizer:</strong> ${parsed.has_immobilizer ? 'Yes' : 'No'} — ${parsed.immobilizer_note}<br><br>
-        <strong>Summary:</strong> ${parsed.verdict_summary}<br><br>
-        <strong>Wiring notes:</strong> ${parsed.wiring_notes}<br><br>
-        <span style="color:var(--muted);font-size:.8rem">Confidence: ${parsed.confidence}</span>
-      </div>`;
-
     result.classList.add('show');
-  } catch (err) {
+  } catch(err) {
     result.innerHTML = `<span style="color:var(--accent)">Error: ${err.message}</span>`;
     result.classList.add('show');
   } finally {
@@ -357,6 +335,14 @@ General rules:
     analyzeBtn.disabled = false;
   }
 };
+
+function downloadSelf() {
+  const src = document.documentElement.outerHTML;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([src], { type: 'text/html' }));
+  a.download = 'hotwire-checker.html';
+  a.click();
+}
 </script>
 </body>
 </html>
