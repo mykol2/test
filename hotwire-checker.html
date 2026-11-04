@@ -303,12 +303,29 @@ Rules:
 - Luxury brands (BMW, Mercedes, Audi post-1995): early immobilizer
 - If you can't identify: set needs_more_photos true, describe what angle/detail would help`;
 
-  // free vision models on OpenRouter, tried in order until one works
-  const models = [
-    'google/gemini-2.0-flash-exp:free',
-    'meta-llama/llama-4-maverick:free',
-    'meta-llama/llama-4-scout:free'
-  ];
+  // fetch free vision-capable models live so we never maintain a stale hardcoded list
+  async function getFreeVisionModels() {
+    const FALLBACK = [
+      'google/gemini-2.0-flash-exp:free',
+      'meta-llama/llama-4-maverick:free',
+      'microsoft/phi-4-multimodal-instruct:free',
+      'qwen/qwen2.5-vl-7b-instruct:free'
+    ];
+    try {
+      const r = await fetch('https://openrouter.ai/api/v1/models', {
+        headers: { 'Authorization': `Bearer ${key}` }
+      });
+      if (!r.ok) return FALLBACK;
+      const { data } = await r.json();
+      const free = data.filter(m =>
+        m.pricing?.prompt === '0' &&
+        (m.architecture?.input_modalities || []).includes('image')
+      ).map(m => m.id);
+      return free.length ? free : FALLBACK;
+    } catch { return FALLBACK; }
+  }
+
+  const models = await getFreeVisionModels();
 
   const imgContent = photos.map(p => ({ type: 'image_url', image_url: { url: `data:${p.mime};base64,${p.b64}` } }));
 
