@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hotwire Checker</title>
+<title>Hotwire Checker — Free</title>
 <style>
   :root {
     --bg: #0d0d0d;
@@ -160,8 +160,8 @@
 <h1>🔑 Hotwire Checker</h1>
 
 <div class="card">
-  <label>Anthropic API Key</label>
-  <input type="password" id="apikey" placeholder="sk-ant-..." autocomplete="off">
+  <label>Google Gemini API Key — <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">get free key</a></label>
+  <input type="password" id="apikey" placeholder="AIza..." autocomplete="off">
 </div>
 
 <div class="card" style="gap:12px;display:flex;flex-direction:column">
@@ -301,26 +301,22 @@ General rules:
 - If you cannot identify the car clearly, set confidence to "low"`;
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-calls': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-5-5',
-        max_tokens: 1024,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: imageMime, data: imageB64 } },
-            { type: 'text', text: prompt }
-          ]
-        }]
-      })
-    });
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { inline_data: { mime_type: imageMime, data: imageB64 } },
+              { text: prompt }
+            ]
+          }],
+          generationConfig: { maxOutputTokens: 1024, responseMimeType: 'application/json' }
+        })
+      }
+    );
 
     const data = await res.json();
 
@@ -328,7 +324,7 @@ General rules:
       throw new Error(data.error?.message || `HTTP ${res.status}`);
     }
 
-    let text = data.content?.[0]?.text || '';
+    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     // strip markdown fences if present
     text = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
 
